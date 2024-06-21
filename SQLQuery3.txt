@@ -1,0 +1,282 @@
+-- To Explore the Tables in the Database
+
+SELECT 
+ TABLE_NAME 
+FROM 
+ AdventureWorks2014.INFORMATION_SCHEMA.TABLES
+WHERE 
+ table_type = 'BASE TABLE'
+
+-- Total No. of Tables in AdventureWorks2014
+
+SELECT 
+ Count(TABLE_NAME) As TotalTables
+From 
+ AdventureWorks2014. INFORMATION_SCHEMA.TABLES
+WHERE 
+ TABLE_TYPE = 'BASE TABLE'
+
+
+--SALES ANALYSIS
+
+-- 1.Total Sales
+
+
+SELECT *
+FROM 
+ AdventureWorks2014.Sales.[SalesOrderDetail]
+Order By 
+ ProductID
+
+Select
+ Round(Sum(LineTotal),2) As TotalSales
+From 
+ Sales.SalesOrderDetail
+
+-- 2. Total Sales Order
+
+Select 
+ Count(SalesOrderID) As TotalSalesOrder
+From 
+ AdventureWorks2014.Sales.SalesOrderDetail
+
+-- 3. Total Order Value per Sales Order ID
+
+Select 
+ SalesOrderID, 
+ Sum(LineTotal) As TotalOrderValue
+From 
+ AdventureWorks2014.Sales.SalesOrderDetail
+Group By 
+ SalesOrderID
+Order By 1
+
+-- 4. Average Order Value per Sales Order
+
+Select 
+ Count(Distinct SalesOrderID) As NoOfSalesOrders
+From 
+ AdventureWorks2014.Sales.SalesOrderDetail
+
+Select 
+ (Sum(LineTotal)/ Count(Distinct SalesOrderID)) As AvgOrderValueperOrder
+From 
+ AdventureWorks2014.Sales.SalesOrderDetail
+
+-- 5. Monthly Sales for the Year 2013
+
+SELECT 
+ DATEPART(MONTH, OrderDate) AS Month, 
+ SUM(TotalDue) AS TotalSales
+FROM 
+ AdventureWorks2014.Sales.SalesOrderHeader
+WHERE 
+ DATEPART(YEAR, OrderDate) = 2013
+GROUP BY 
+ DATEPART(MONTH, OrderDate)
+ORDER BY 
+ Month
+
+-- 6. Yearly Sales From 2011 to 2014
+
+SELECT 
+ DATEPART(YEAR, OrderDate) AS Year, 
+ SUM(TotalDue) AS TotalSales
+FROM 
+ AdventureWorks2014.Sales.SalesOrderHeader
+GROUP BY 
+ DATEPART(YEAR, OrderDate)
+ORDER BY 
+ Year
+
+--7. % Change in Annual Sales- Territory wise, Country wise, Group wise, Business Entity Wise
+
+Select *
+From 
+ AdventureWorks2014.Sales.SalesTerritory
+
+Select 
+ TerritoryID, 
+ (SalesYTD-SalesLastYear)/SalesLastYear * 100 As AnnualChangeSales
+From 
+ AdventureWorks2014.Sales.SalesTerritory
+Order By 
+ AnnualChangeSales Desc
+
+
+Select 
+ CountryRegionCode, 
+ Sum( (SalesYTD-SalesLastYear)/SalesLastYear * 100) As AnnualChangeSales
+From 
+ AdventureWorks2014.Sales.SalesTerritory
+Group By 
+ CountryRegionCode
+Order By 
+ AnnualChangeSales Desc
+
+
+Select 
+ [Group], 
+ Sum( (SalesYTD-SalesLastYear)/SalesLastYear * 100) As AnnualChangeSales
+From 
+ AdventureWorks2014.Sales.SalesTerritory
+Group By 
+ [Group]
+Order By 
+ AnnualChangeSales Desc
+
+
+Select 
+ BusinessEntityID, 
+ (SalesYTD-SalesLastYear)/SalesLastYear * 100 As AnnualChangeSales
+From 
+ AdventureWorks2014.Sales.SalesTerritoryHistory TerHist
+Join
+ AdventureWorks2014.Sales.SalesTerritory Ter
+ On TerHist.TerritoryID = Ter.TerritoryID
+Order By 
+ AnnualChangeSales Desc
+
+-- 8. Top 5 Business Entities with maximum Increase in Annual Sales
+
+Select Top(5) 
+ BusinessEntityID, 
+ (SalesYTD-SalesLastYear)/SalesLastYear * 100 As AnnualChangeSales
+From 
+ AdventureWorks2014.Sales.SalesTerritoryHistory TerHist
+Join  
+ AdventureWorks2014.Sales.SalesTerritory Ter
+ On TerHist.TerritoryID = Ter.TerritoryID
+Order By 
+ AnnualChangeSales Desc
+
+
+
+-- PRODUCT ANALYSIS
+
+-- 1. OrderQty per ProductID using WHERE Statement
+
+Select *
+From 
+ AdventureWorks2014.Sales.SalesOrderDetail
+Order By 
+ ProductID
+
+Select 
+ Sum(OrderQty)
+From 
+ AdventureWorks2014.Sales.SalesOrderDetail
+Where 
+ ProductID = '707'
+
+-- 2. OrderQty for each ProductID 
+
+Select 
+ ProductID, 
+ Sum(OrderQty) As OtyPerProductID
+From 
+ AdventureWorks2014.Sales.SalesOrderDetail
+Group By 
+ ProductID
+Order By 
+ ProductID
+
+-- 3. Best Selling Products
+
+Select 
+ D.LineTotal, 
+ D.OrderQty, 
+ D.[ProductID], 
+ P.[Name] As ProductName
+From 
+ AdventureWorks2014.Sales.SalesOrderDetail D
+Join 
+ AdventureWorks2014.Production.Product P
+ On D.ProductID = P.ProductID
+
+SELECT TOP 10
+ D.ProductID, 
+ P.[Name] As ProductName,
+ SUM(D.LineTotal) AS TotalRevenue,
+ SUM(D.OrderQty) AS TotalQuantitySold
+FROM
+ AdventureWorks2014.Sales.SalesOrderDetail D
+JOIN
+ AdventureWorks2014.Production.Product P
+ ON D.ProductID = P.ProductID
+GROUP BY
+ D.ProductID, P.[Name]
+ORDER BY
+ TotalRevenue DESC
+
+
+ -- 4. Relationship between Product Rating and Product Reviews
+
+
+SELECT
+ P.Name AS ProductName,
+ AVG(PR.Rating) AS AvgRating,
+ COUNT(PR.ProductReviewID) AS TotalReviews
+FROM
+ AdventureWorks2014.Production.Product P
+LEFT JOIN
+ AdventureWorks2014.Production.ProductReview PR
+ ON P.ProductID = PR.ProductID
+GROUP BY
+ P.Name
+
+
+-- HR ANALYSIS
+
+-- 1. Male Vs Female Employees for Different Job Titles
+
+Select *
+From 
+ AdventureWorks2014.HumanResources.Employee
+
+Select 
+ BusinessEntityID,
+ JobTitle,
+ Gender, 
+  Count(Gender) Over(Partition By Gender) As TotalGender
+From 
+ AdventureWorks2014.HumanResources.Employee
+
+
+-- 2. No. of Employees for Each Job Title
+
+Select 
+ JobTitle, 
+ Count(JobTitle)
+From 
+ AdventureWorks2014.HumanResources.Employee
+Group By 
+ JobTitle
+
+-- 3. Age Group of Employees
+
+Select 
+ DATEPART(Year,BirthDate) As BirthYear,
+Case
+    When DATEPART(Year,BirthDate) Between 1950 and 1960 Then '1950-1960'
+	When DATEPART(Year,BirthDate) Between 1960 and 1970 Then '1960-1970'
+	When DATEPART(Year,BirthDate) Between 1970 and 1980 Then '1970-1980'
+	When DATEPART(Year,BirthDate) Between 1980 and 1990 Then '1980-1990'
+	Else '1990-2000'
+End As BirthYearCategory
+From 
+ AdventureWorks2014.HumanResources.Employee
+Order By 
+ BirthYear
+
+-- Employees with Maximum Sick Leaves
+
+Select 
+ BusinessEntityID, 
+ SickLeaveHours
+From 
+ AdventureWorks2014.HumanResources.Employee
+Where 
+ SickLeaveHours > 50
+Order By 
+ SickLeaveHours Desc
