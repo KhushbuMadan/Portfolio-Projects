@@ -1,1 +1,1 @@
-These Projects use tools such as PowerBI, SQL, Excel and Tablue to showcase my Data Analytics skills
+These Projects use tools such as PowerBI, MySQL, Excel and Tableau to showcase my Data Analytics skills
